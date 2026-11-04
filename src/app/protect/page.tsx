@@ -89,14 +89,17 @@ export default function ProtectPage() {
             {/* Visual Photo */}
             <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-5 shadow-xs border border-cooling-200 bg-white">
               <img
-                src="https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=600&q=80"
+                src="/images/hub-protect-hydration.jpg"
                 alt="Continuous clean water hydration"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
+                loading="eager"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               <div className="absolute top-2.5 left-2.5 bg-cooling-600 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-xs">
                 {language === "km" ? "សសរស្តម្ភទី ១ • ទឹកស្អាត 💧" : "Pillar 1 • Hydration 💧"}
+              </div>
+              <div className="absolute top-2.5 right-2.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg border border-white/20 shadow-xs">
+                {language === "km" ? "ប្រភព៖ ការណែនាំផឹកទឹក" : "Credit: Hydration Safety"}
               </div>
             </div>
 

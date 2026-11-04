@@ -75,15 +75,18 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Community Visual Banner */}
+        {/* Community & Legal Rights Visual Banner */}
         <div className="relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden border border-gray-200 shadow-sm group">
           <img
-            src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1000&q=80"
-            alt="Community solidarity and worker health support"
+            src="/images/hub-about-law.jpg"
+            alt="Cambodian worker protection and legal rights"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
+          <div className="absolute top-3 right-3 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg border border-white/20 shadow-xs">
+            {language === "km" ? "ប្រភព៖ ច្បាប់ការងារ (Wix)" : "Credit: Labour Law (Wix)"}
+          </div>
           <div className="absolute bottom-4 left-5 right-5 text-white">
             <span className="text-xs font-black uppercase tracking-wider bg-cooling-600 px-3 py-1 rounded-xl mb-1.5 inline-block">
               {language === "km" ? "សាមគ្គីភាពសុខភាពសហគមន៍" : "Grassroots Community Solidarity"}

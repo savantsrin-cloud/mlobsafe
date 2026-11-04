@@ -48,6 +48,30 @@ export default function SignsPage() {
         </p>
       </div>
 
+      {/* Featured Visual Banner - Understanding Heat-Related Illnesses */}
+      <div className="relative w-full h-64 sm:h-80 rounded-3xl overflow-hidden border-2 border-red-200 shadow-md group bg-white">
+        <img
+          src="/images/hub-signs-heat-illness.jpg"
+          alt="Understanding Heat-Related Illnesses Infographic"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          loading="eager"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent pointer-events-none" />
+        <div className="absolute top-4 right-4 bg-black/65 backdrop-blur-xs text-white text-xs font-bold px-3 py-1 rounded-xl border border-white/20 shadow-xs">
+          {language === "km" ? "ប្រភព៖ Heat Illness Guide" : "Credit: Health Guide"}
+        </div>
+        <div className="absolute bottom-5 left-6 right-6 text-white">
+          <span className="text-xs font-black uppercase tracking-wider bg-red-600 px-3 py-1 rounded-xl mb-2 inline-block">
+            {language === "km" ? "មគ្គុទ្ទេសក៍សុខភាពកម្ដៅ" : "Heat Illness Recognition"}
+          </span>
+          <h2 className="text-xl sm:text-2xl font-black leading-snug">
+            {language === "km" 
+              ? "ការយល់ដឹងអំពីជំងឺបង្កឡើងដោយកម្ដៅថ្ងៃ (Understanding Heat-Related Illnesses)" 
+              : "Understanding Heat-Related Illnesses & Body Temperature Signals"}
+          </h2>
+        </div>
+      </div>
+
       <div className="p-6 sm:p-7 rounded-3xl bg-danger-600 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-2 border-danger-700 animate-fadeIn">
         <div className="flex items-start space-x-4">
           <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">

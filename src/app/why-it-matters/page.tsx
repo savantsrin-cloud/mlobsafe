@@ -43,46 +43,46 @@ export default function WhyItMattersPage() {
         </p>
       </div>
 
-      {/* Visual Photography Spotlight */}
+      {/* Visual Photography Spotlight - Includes 3D Pie Chart of Heat-Related Illnesses */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="relative h-60 sm:h-72 rounded-3xl overflow-hidden border-2 border-heat-200 shadow-soft group">
+        <div className="relative h-60 sm:h-72 rounded-3xl overflow-hidden border-2 border-heat-200 shadow-soft group bg-white flex items-center justify-center">
           <img
-            src="https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=800&q=80"
-            alt="Phnom Penh urban heat exposure"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
+            src="/images/hub-why-matters-statistics.jpg"
+            alt="Distribution of Heat-Related Illnesses: Heat Stroke, Heat Exhaustion"
+            className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+            loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
-          <div className="absolute bottom-5 left-5 right-5 text-white">
-            <span className="text-xs font-black uppercase tracking-wider bg-heat-600 px-3 py-1 rounded-lg mb-2 inline-block">
-              {language === "km" ? "បរិស្ថានកម្តៅទីក្រុង" : "Urban Heat Vulnerability"}
-            </span>
-            <h3 className="text-xl font-black">
-              {language === "km" ? "សីតុណ្ហភាពលើដងផ្លូវរាជធានីភ្នំពេញ" : "Surface Temperatures on Phnom Penh Streets"}
-            </h3>
-            <p className="text-xs sm:text-sm text-white/90 mt-1 font-medium">
-              {language === "km" ? "បេតុង និងកៅស៊ូថ្នល់ឡើងកម្តៅលើសពី ៥០°C នៅម៉ោងថ្ងៃត្រង់" : "Road asphalt and concrete radiate 50°C+ during midday hours"}
-            </p>
+          <div className="absolute top-3 right-3 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg border border-white/20 shadow-xs z-10">
+            {language === "km" ? "ប្រភព៖ ទិន្នន័យស្រាវជ្រាវ HRI" : "Credit: HRI Research Data"}
+          </div>
+          <div className="absolute bottom-3 left-4 right-4 bg-black/75 backdrop-blur-xs p-2.5 rounded-xl text-white text-xs z-10">
+            <span className="font-black text-amber-300">
+              {language === "km" ? "ការបែងចែកករណីជំងឺកម្ដៅ៖" : "Heat Illness Classification:"}
+            </span>{" "}
+            <span>Suspected HE (34.2%), Suspected HS (31.2%), Heat Exhaustion (17.3%), Heat Stroke (6.1%)</span>
           </div>
         </div>
 
         <div className="relative h-60 sm:h-72 rounded-3xl overflow-hidden border-2 border-cooling-200 shadow-soft group">
           <img
-            src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80"
-            alt="Workers standing in solidarity"
+            src="/images/hub-about-law.jpg"
+            alt="Workers legal rights and policy support"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+          <div className="absolute top-3 right-3 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg border border-white/20 shadow-xs">
+            {language === "km" ? "ប្រភព៖ ច្បាប់ការងារ (Wix)" : "Credit: Labour Law (Wix)"}
+          </div>
           <div className="absolute bottom-5 left-5 right-5 text-white">
             <span className="text-xs font-black uppercase tracking-wider bg-cooling-600 px-3 py-1 rounded-lg mb-2 inline-block">
               {language === "km" ? "សុវត្ថិភាពការងារ និងសិទ្ធិ" : "Labour Protection Rights"}
             </span>
             <h3 className="text-xl font-black">
-              {language === "km" ? "ការការពារសុខភាពពលករខ្មែរ" : "Protecting Cambodian Worker Well-being"}
+              {language === "km" ? "សិទ្ធិទទួលបានបរិយាកាសការងារត្រជាក់" : "Right to a Safe & Cool Workplace"}
             </h3>
             <p className="text-xs sm:text-sm text-white/90 mt-1 font-medium">
-              {language === "km" ? "ទឹកស្អាត ម្លប់ និងការសម្រាក គឺជាសិទ្ធិជាមូលដ្ឋាននៅកន្លែងធ្វើការ" : "Hydration, shade, and rest breaks are fundamental worker rights"}
+              {language === "km" ? "ប្រកាស ១៤៧ ស្តីពីខ្យល់ចេញចូល និងមាត្រា ២២៩-២៣០ នៃច្បាប់ការងារ" : "Prakas 147 and Labour Law Articles 229-230 on Thermal Workplace Environment"}
             </p>
           </div>
         </div>
