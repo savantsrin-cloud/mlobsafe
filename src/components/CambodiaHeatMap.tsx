@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { cambodiaHeatMapData } from "@/data/heatStressTranslations";
 import { 
   Search, 
   Navigation, 
@@ -20,13 +19,19 @@ import {
   Compass, 
   Maximize2, 
   Minimize2, 
-  Share2, 
-  Clock, 
-  ShieldCheck, 
   Droplets,
   HeartPulse,
   Flame,
-  ArrowRight
+  Edit3,
+  Check,
+  Trash2,
+  RotateCcw,
+  Download,
+  Upload,
+  PlusCircle,
+  Save,
+  ShieldCheck,
+  HelpCircle
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -44,7 +49,7 @@ const getL = () => {
 type MapType = "hybrid" | "roadmap" | "terrain";
 type FilterCategory = "all" | "garment" | "transport" | "food" | "hospital" | "heatwave";
 
-interface WorkerLocation {
+export interface WorkerLocation {
   id: string;
   nameEn: string;
   nameKm: string;
@@ -64,8 +69,8 @@ interface WorkerLocation {
   imageUrl?: string;
 }
 
-// Key worker locations in Phnom Penh & Cambodia
-const workerLocations: WorkerLocation[] = [
+// Initial Default Locations
+const defaultWorkerLocations: WorkerLocation[] = [
   // 1. Garment Hubs
   {
     id: "veng_sreng",
@@ -300,12 +305,23 @@ const workerLocations: WorkerLocation[] = [
 export default function CambodiaHeatMap() {
   const { language } = useLanguage();
   const [isClient, setIsClient] = useState<boolean>(false);
+  
+  // State for Editable Worker Locations (Stored in localStorage!)
+  const [locations, setLocations] = useState<WorkerLocation[]>(defaultWorkerLocations);
+  const [selectedLocation, setSelectedLocation] = useState<WorkerLocation>(defaultWorkerLocations[0]);
+
+  // Edit Mode Toggle
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [editFormData, setEditFormData] = useState<WorkerLocation>(defaultWorkerLocations[0]);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string>("");
+
+  // Map Controls
   const [mapType, setMapType] = useState<MapType>("hybrid");
   const [activeCategory, setActiveCategory] = useState<FilterCategory>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showHeatRadar, setShowHeatRadar] = useState<boolean>(true);
   const [masterTemp, setMasterTemp] = useState<number | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<WorkerLocation>(workerLocations[0]);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showLayerMenu, setShowLayerMenu] = useState<boolean>(false);
@@ -316,10 +332,80 @@ export default function CambodiaHeatMap() {
   const tileLayerRef = useRef<any>(null);
   const heatOverlayRef = useRef<any>(null);
   const markersRef = useRef<{ [key: string]: any }>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load saved locations from localStorage on client mount
   useEffect(() => {
     setIsClient(true);
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("mlobsafe_custom_locations");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLocations(parsed);
+            setSelectedLocation(parsed[0]);
+          }
+        } catch (e) {
+          console.error("Failed to parse custom locations:", e);
+        }
+      }
+    }
   }, []);
+
+  // Save to localStorage whenever locations change
+  const saveLocationsToStorage = (newLocs: WorkerLocation[]) => {
+    setLocations(newLocs);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mlobsafe_custom_locations", JSON.stringify(newLocs));
+    }
+    setSaveSuccessMsg(language === "km" ? "រក្សាទុកជោគជ័យក្នុងកម្មវិធីរុករក!" : "Saved successfully to your browser!");
+    setTimeout(() => setSaveSuccessMsg(""), 3500);
+  };
+
+  // Reset to original default locations
+  const handleResetToDefaults = () => {
+    if (window.confirm(language === "km" ? "តើអ្នកចង់កំណត់ទីតាំងទាំងអស់មកដូចដើមវិញទេ?" : "Are you sure you want to reset all locations to original defaults?")) {
+      setLocations(defaultWorkerLocations);
+      setSelectedLocation(defaultWorkerLocations[0]);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("mlobsafe_custom_locations");
+      }
+      setIsFormOpen(false);
+      setSaveSuccessMsg(language === "km" ? "បានកំណត់ទិន្នន័យមកដើមវិញ!" : "Reset to default settings!");
+      setTimeout(() => setSaveSuccessMsg(""), 3500);
+    }
+  };
+
+  // Export locations as JSON file
+  const handleExportJSON = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(locations, null, 2));
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `mlobsafe_locations_${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  // Import locations from JSON file
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (e.target.files && e.target.files[0]) {
+      fileReader.readAsText(e.target.files[0], "UTF-8");
+      fileReader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target?.result as string);
+          if (Array.isArray(parsed)) {
+            saveLocationsToStorage(parsed);
+            if (parsed.length > 0) setSelectedLocation(parsed[0]);
+          }
+        } catch (err) {
+          alert("Invalid JSON file format");
+        }
+      };
+    }
+  };
 
   // NOAA Heat Index formula ("Feels Like")
   const calculateFeelsLike = (tempC: number, rh: number): number => {
@@ -350,7 +436,7 @@ export default function CambodiaHeatMap() {
   const currentFeelsLike = calculateFeelsLike(currentTemp, selectedLocation.humidity);
 
   // Filter locations by search query and category
-  const filteredLocations = workerLocations.filter((loc) => {
+  const filteredLocations = locations.filter((loc) => {
     const matchesCat = 
       activeCategory === "all" ||
       (activeCategory === "garment" && loc.category === "garment") ||
@@ -381,14 +467,12 @@ export default function CambodiaHeatMap() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    // Bounds covering Phnom Penh and surrounding Kandal/Kampong Speu corridor
     const north = 11.68;
     const south = 11.45;
     const west = 104.78;
     const east = 105.02;
 
-    // Draw glowing heat hotspots over urban Phnom Penh worker hubs
-    workerLocations.forEach((loc) => {
+    locations.forEach((loc) => {
       const temp = getActiveLocationTemp(loc);
       const px = ((loc.lng - west) / (east - west)) * width;
       const py = ((north - loc.lat) / (north - south)) * height;
@@ -431,7 +515,6 @@ export default function CambodiaHeatMap() {
     }
 
     if (!mapInstanceRef.current && mapContainerRef.current) {
-      // Centered exactly on Phnom Penh (Royal University of Phnom Penh / Toul Kork / Veng Sreng)
       const map = Leaflet.map(mapContainerRef.current, {
         center: [11.5621, 104.8885],
         zoom: 13,
@@ -442,6 +525,37 @@ export default function CambodiaHeatMap() {
       });
 
       mapInstanceRef.current = map;
+
+      // Allow clicking on map to add a custom pin when in Edit Mode!
+      map.on("click", (e: any) => {
+        const lat = Number(e.latlng.lat.toFixed(5));
+        const lng = Number(e.latlng.lng.toFixed(5));
+        
+        const newLocation: WorkerLocation = {
+          id: "custom_" + Date.now(),
+          nameEn: "Custom Work Location",
+          nameKm: "ទីតាំងការងារថ្មី",
+          category: "garment",
+          categoryLabelEn: "Worker Location",
+          categoryLabelKm: "កន្លែងធ្វើការ",
+          lat,
+          lng,
+          baseTemp: 39,
+          humidity: 60,
+          addressEn: `Coordinates: ${lat}, ${lng}`,
+          addressKm: `កូអរដោនេ៖ ${lat}, ${lng}`,
+          descriptionEn: "Added by user. Click edit below to change details.",
+          descriptionKm: "បានបន្ថែមដោយអ្នកប្រើប្រាស់។ ចុចកែសម្រួលដើម្បីកែប្រែព័ត៌មាន។",
+          adviceEn: "Keep drinking cool water and rest in shade regularly.",
+          adviceKm: "ត្រូវផឹកទឹកត្រជាក់ និងសម្រាកក្នុងម្លប់ជាប្រចាំ។",
+        };
+
+        // Open editing form immediately
+        setEditFormData(newLocation);
+        setIsFormOpen(true);
+        setSelectedLocation(newLocation);
+        setIsDetailsOpen(true);
+      });
 
       setTimeout(() => {
         try {
@@ -471,7 +585,7 @@ export default function CambodiaHeatMap() {
       map.invalidateSize();
     } catch (e) {}
 
-    // A. Real Google Maps Satellite / Hybrid Tiles (exact match to screenshot!)
+    // A. Real Google Maps Satellite / Hybrid Tiles
     if (tileLayerRef.current) {
       try {
         map.removeLayer(tileLayerRef.current);
@@ -479,11 +593,11 @@ export default function CambodiaHeatMap() {
       tileLayerRef.current = null;
     }
 
-    let tileUrl = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"; // Google Hybrid: Satellite + Street Labels
+    let tileUrl = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
     if (mapType === "roadmap") {
-      tileUrl = "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"; // Google Standard Roadmap
+      tileUrl = "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
     } else if (mapType === "terrain") {
-      tileUrl = "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}"; // Google Terrain
+      tileUrl = "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}";
     }
 
     tileLayerRef.current = Leaflet.tileLayer(tileUrl, {
@@ -525,22 +639,20 @@ export default function CambodiaHeatMap() {
       const isSelected = loc.id === selectedLocation.id;
       const temp = getActiveLocationTemp(loc);
 
-      // Distinct Google Maps Pin Colors & Icons
-      let pinColor = "#ea580c"; // orange for food
+      let pinColor = "#ea580c";
       let pinSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/><path d="M6 2v20"/><path d="M12 11v11"/></svg>`;
 
       if (loc.category === "hospital") {
-        pinColor = "#dc2626"; // red hospital pin
+        pinColor = "#dc2626";
         pinSvg = `<span style="color: white; font-weight: 900; font-size: 13px; font-family: sans-serif;">H</span>`;
       } else if (loc.category === "garment") {
-        pinColor = "#9333ea"; // purple garment pin
+        pinColor = "#9333ea";
         pinSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>`;
       } else if (loc.category === "transport") {
-        pinColor = "#0284c7"; // blue transport pin
+        pinColor = "#0284c7";
         pinSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>`;
       }
 
-      // Authentic Google Maps Pin with Drop-Shadow & Stem
       const pinHtml = `
         <div class="gmaps-pin-wrapper" style="
           display: flex;
@@ -608,6 +720,7 @@ export default function CambodiaHeatMap() {
         .addTo(map)
         .on("click", () => {
           setSelectedLocation(loc);
+          setEditFormData(loc);
           setIsDetailsOpen(true);
           map.flyTo([loc.lat, loc.lng], 15, { duration: 0.8 });
         });
@@ -615,13 +728,49 @@ export default function CambodiaHeatMap() {
       markersRef.current[loc.id] = marker;
     });
 
-  }, [isClient, mapType, showHeatRadar, activeCategory, searchQuery, selectedLocation.id, masterTemp, language]);
+  }, [isClient, mapType, showHeatRadar, activeCategory, searchQuery, selectedLocation.id, locations, masterTemp, language]);
 
   const handleSelectLoc = (loc: WorkerLocation) => {
     setSelectedLocation(loc);
+    setEditFormData(loc);
     setIsDetailsOpen(true);
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([loc.lat, loc.lng], 15, { duration: 0.8 });
+    }
+  };
+
+  // Save changes to location from the Edit Form
+  const handleSaveForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    const existingIndex = locations.findIndex((l) => l.id === editFormData.id);
+    let updatedLocations: WorkerLocation[];
+
+    if (existingIndex >= 0) {
+      // Update existing
+      updatedLocations = [...locations];
+      updatedLocations[existingIndex] = editFormData;
+    } else {
+      // Add new
+      updatedLocations = [editFormData, ...locations];
+    }
+
+    saveLocationsToStorage(updatedLocations);
+    setSelectedLocation(editFormData);
+    setIsFormOpen(false);
+  };
+
+  // Delete a location
+  const handleDeleteLocation = (id: string) => {
+    if (locations.length <= 1) {
+      alert("You must keep at least 1 location on the map.");
+      return;
+    }
+    if (window.confirm(language === "km" ? "តើអ្នកចង់លុបទីតាំងនេះទេ?" : "Are you sure you want to delete this location?")) {
+      const remaining = locations.filter((l) => l.id !== id);
+      saveLocationsToStorage(remaining);
+      setSelectedLocation(remaining[0]);
+      setEditFormData(remaining[0]);
+      setIsFormOpen(false);
     }
   };
 
@@ -657,30 +806,145 @@ export default function CambodiaHeatMap() {
   return (
     <div className="space-y-6">
       
-      {/* 1. MASTER HEAT TEST CONTROLS (Top Toolbar) */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border-2 border-heat-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="text-xs font-black uppercase tracking-wider text-heat-700 flex items-center gap-1.5 mb-1">
-            <Flame className="w-4 h-4 text-heat-600 animate-pulse" />
-            <span>{language === "km" ? "ឧបករណ៍តេស្តកម្ដៅ និងក្លែងធ្វើហានិភ័យ" : "Heatwave Simulation & Controls"}</span>
+      {/* 1. MASTER TOOLBAR: HEAT SIMULATION & SELF-EDIT MODE SWITCH */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border-2 border-heat-200 shadow-sm space-y-4">
+        
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div className="text-xs font-black uppercase tracking-wider text-heat-700 flex items-center gap-1.5 mb-1">
+              <Flame className="w-4 h-4 text-heat-600 animate-pulse" />
+              <span>{language === "km" ? "ផែនទីផ្កាយរណប Google Maps & មុខងារកែប្រែដោយខ្លួនឯង" : "Google Maps Satellite & Self-Editing Mode"}</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">
+              {language === "km" ? "ផែនទីសុវត្ថិភាពកម្ដៅកម្មករ (Google Maps Live)" : "Worker Heat Stress Google Satellite Radar"}
+            </h2>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-gray-900 leading-snug">
-            {language === "km" ? "ផែនទីផ្កាយរណប Google Maps សុវត្ថិភាពកម្ដៅ" : "Google Maps Satellite Heat Stress Radar"}
-          </h2>
+
+          {/* EDIT MODE TOGGLE & QUICK ACTIONS */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => {
+                const nextMode = !isEditMode;
+                setIsEditMode(nextMode);
+                if (nextMode) {
+                  setIsFormOpen(true);
+                  setEditFormData(selectedLocation);
+                } else {
+                  setIsFormOpen(false);
+                }
+              }}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 shadow-sm ${
+                isEditMode
+                  ? "bg-purple-600 text-white shadow-purple-600/30 ring-2 ring-purple-600 ring-offset-2"
+                  : "bg-white text-purple-700 hover:bg-purple-50 border-2 border-purple-300"
+              }`}
+            >
+              <Edit3 className="w-4 h-4" />
+              <span>{isEditMode ? (language === "km" ? "កំពុងកែសម្រួល (ON)" : "Edit Mode: ON") : (language === "km" ? "✏️ បើកមុខងារកែសម្រួល (Edit Mode)" : "✏️ Turn ON Edit Mode")}</span>
+            </button>
+
+            {/* Add New Location Button */}
+            <button
+              onClick={() => {
+                const newLoc: WorkerLocation = {
+                  id: "custom_" + Date.now(),
+                  nameEn: "New Priority Workplace",
+                  nameKm: "ទីតាំងការងារថ្មី",
+                  category: "garment",
+                  categoryLabelEn: "Worker Zone",
+                  categoryLabelKm: "តំបន់កម្មករ",
+                  lat: 11.5500,
+                  lng: 104.9000,
+                  baseTemp: 40,
+                  humidity: 60,
+                  addressEn: "Phnom Penh, Cambodia",
+                  addressKm: "រាជធានីភ្នំពេញ កម្ពុជា",
+                  descriptionEn: "Describe working conditions and heat traps here.",
+                  descriptionKm: "សរសេរពិពណ៌នាអំពីលក្ខខណ្ឌកម្ដៅនៅទីនេះ។",
+                  adviceEn: "Hydrate hourly, take 5-10 min shade breaks.",
+                  adviceKm: "ផឹកទឹក ១ ម៉ោងម្តង និងសម្រាកក្នុងម្លប់។",
+                };
+                setEditFormData(newLoc);
+                setIsFormOpen(true);
+                setIsEditMode(true);
+              }}
+              className="px-3 py-2 rounded-xl text-xs font-black bg-heat-600 hover:bg-heat-700 text-white transition flex items-center gap-1.5 shadow-xs"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{language === "km" ? "+ បន្ថែមទីតាំងថ្មី" : "+ Add Location"}</span>
+            </button>
+
+            {/* Export / Reset Dropdown Buttons */}
+            <button
+              onClick={handleExportJSON}
+              title="Download your custom map data as JSON"
+              className="p-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              title="Import JSON data"
+              className="p-2 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+            <input 
+              ref={fileInputRef} 
+              type="file" 
+              accept=".json" 
+              onChange={handleImportJSON} 
+              className="hidden" 
+            />
+
+            <button
+              onClick={handleResetToDefaults}
+              title="Reset all locations to original defaults"
+              className="p-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 transition"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Quick Temperature Presets */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Success Alert Banner */}
+        {saveSuccessMsg && (
+          <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-green-800 text-xs font-black flex items-center gap-2 animate-fadeIn">
+            <Check className="w-4 h-4 text-green-600" />
+            <span>{saveSuccessMsg}</span>
+          </div>
+        )}
+
+        {/* Edit Mode Instruction Banner */}
+        {isEditMode && (
+          <div className="p-3.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
+              <span>
+                {language === "km" 
+                  ? "👉 របៀបកែ៖ ចុចលើចំណុចណាមួយលើផែនទីដើម្បីទម្លាក់ Pin ថ្មី ឬចុចលើ Pin ណាមួយរួចកែប្រែក្នុងទម្រង់ខាងក្រោម!" 
+                  : "👉 How to edit: Click anywhere on the map to drop a new Pin, or click any existing Pin to edit its values below!"}
+              </span>
+            </div>
+            <span className="text-[11px] text-purple-700 font-normal">
+              (Auto-saved to your browser)
+            </span>
+          </div>
+        )}
+
+        {/* Master Temp Quick Simulation Toolbar */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
           <span className="text-xs font-bold text-gray-600 mr-1">
-            {language === "km" ? "កម្រិតកម្ដៅ៖" : "Simulate:"}
+            {language === "km" ? "ក្លែងធ្វើកម្ដៅថ្ងៃត្រង់៖" : "Simulate Heat:"}
           </span>
           {[35, 37, 39, 41, 43].map((temp) => (
             <button
               key={temp}
               onClick={() => setMasterTemp(temp)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+              className={`px-3 py-1 rounded-xl text-xs font-black transition-all ${
                 masterTemp === temp
-                  ? "bg-red-600 text-white shadow-md shadow-red-600/30 ring-2 ring-red-600 ring-offset-1"
+                  ? "bg-red-600 text-white shadow-xs"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-800"
               }`}
             >
@@ -690,12 +954,13 @@ export default function CambodiaHeatMap() {
           {masterTemp !== null && (
             <button
               onClick={() => setMasterTemp(null)}
-              className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200"
+              className="px-2.5 py-1 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200"
             >
               {language === "km" ? "កំណត់ឡើងវិញ" : "Reset"}
             </button>
           )}
         </div>
+
       </div>
 
       {/* 2. THE GOOGLE MAPS SATELLITE CANVAS CONTAINER */}
@@ -731,7 +996,7 @@ export default function CambodiaHeatMap() {
             <button 
               onClick={handleRecenterPhnomPenh}
               className="p-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 transition flex-shrink-0"
-              title="Directions / Recenter Phnom Penh"
+              title="Recenter Phnom Penh"
             >
               <Navigation className="w-4 h-4" />
             </button>
@@ -812,7 +1077,7 @@ export default function CambodiaHeatMap() {
           </div>
         </div>
 
-        {/* BOTTOM-LEFT "LAYERS" BUTTON (Exact Google Maps Style!) */}
+        {/* BOTTOM-LEFT "LAYERS" BUTTON */}
         <div className="absolute bottom-6 left-4 z-20 pointer-events-auto">
           <div className="relative">
             <button
@@ -832,7 +1097,6 @@ export default function CambodiaHeatMap() {
               </div>
             </button>
 
-            {/* Layer Chooser Popout */}
             {showLayerMenu && (
               <div className="absolute bottom-14 left-0 bg-white rounded-2xl shadow-2xl border border-gray-200 p-2 w-48 space-y-1 text-xs font-bold animate-fadeIn">
                 <button
@@ -869,8 +1133,6 @@ export default function CambodiaHeatMap() {
 
         {/* BOTTOM-RIGHT GOOGLE MAPS CONTROLS */}
         <div className="absolute bottom-6 right-4 z-20 flex flex-col items-center gap-2 pointer-events-auto">
-          
-          {/* Recenter / Fullscreen */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
             <button
               onClick={handleRecenterPhnomPenh}
@@ -888,7 +1150,6 @@ export default function CambodiaHeatMap() {
             </button>
           </div>
 
-          {/* Zoom Buttons (+ / -) */}
           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
             <button
               onClick={handleZoomIn}
@@ -907,14 +1168,236 @@ export default function CambodiaHeatMap() {
           </div>
         </div>
 
-        {/* GOOGLE MAPS WATERMARK (Bottom-Center) */}
+        {/* WATERMARK */}
         <div className="absolute bottom-2 left-32 z-10 pointer-events-none opacity-80 text-[11px] font-black tracking-wider text-white drop-shadow">
           Google Maps
         </div>
 
       </div>
 
-      {/* 3. GOOGLE MAPS PLACE INSPECTION CARD (Synchronized with Map Pin Selection) */}
+      {/* 3. EDIT LOCATION FORM MODAL (When Edit Mode is Active) */}
+      {isFormOpen && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border-4 border-purple-400 shadow-2xl space-y-6 animate-fadeIn">
+          
+          <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <span className="p-2 rounded-xl bg-purple-100 text-purple-700">
+                <Edit3 className="w-5 h-5" />
+              </span>
+              <div>
+                <h3 className="text-xl font-black text-gray-900">
+                  {language === "km" ? "កែប្រែព័ត៌មានទីតាំងនេះដោយខ្លួនឯង" : "Edit This Location Details"}
+                </h3>
+                <p className="text-xs text-gray-500 font-semibold">
+                  {language === "km" ? "អ្នកអាចផ្លាស់ប្តូរឈ្មោះ កម្ដៅ សំណើម ការណែនាំ និងការវិភាគហានិភ័យបានភ្លាមៗ" : "Customize place name, temperature, advice, and risk level"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsFormOpen(false)}
+              className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveForm} className="space-y-4">
+            
+            {/* Row 1: Name En & Name Km */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                  Name (English)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.nameEn}
+                  onChange={(e) => setEditFormData({ ...editFormData, nameEn: e.target.value })}
+                  placeholder="e.g. Veng Sreng Garment SEZ"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                  ឈ្មោះទីតាំង (ខ្មែរ)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.nameKm}
+                  onChange={(e) => setEditFormData({ ...editFormData, nameKm: e.target.value })}
+                  placeholder="ឧ. តំបន់រោងចក្រ វេងស្រេង"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 font-khmer"
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Category, Temperature, Humidity */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                  {language === "km" ? "ប្រភេទមុខរបរ / ទីតាំង" : "Category"}
+                </label>
+                <select
+                  value={editFormData.category}
+                  onChange={(e) => {
+                    const cat = e.target.value as any;
+                    let labelEn = "Garment Factory";
+                    let labelKm = "រោងចក្រកាត់ដេរ";
+                    if (cat === "transport") { labelEn = "Tuk-Tuk Hub"; labelKm = "ចំណតកង់បី"; }
+                    if (cat === "food") { labelEn = "Street Food Hub"; labelKm = "តូបលក់ម្ហូប"; }
+                    if (cat === "hospital") { labelEn = "Emergency Hospital"; labelKm = "មន្ទីរពេទ្យសង្គ្រោះ"; }
+                    setEditFormData({ 
+                      ...editFormData, 
+                      category: cat,
+                      categoryLabelEn: labelEn,
+                      categoryLabelKm: labelKm 
+                    });
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="garment">🧵 Garment Factory (កាត់ដេរ)</option>
+                  <option value="transport">🛺 Tuk-Tuk Hub (អ្នករត់កង់បី)</option>
+                  <option value="food">🍳 Street Food (លក់ដូរតាមផ្លូវ)</option>
+                  <option value="hospital">🏥 Hospital (មន្ទីរពេទ្យ)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                  {language === "km" ? "សីតុណ្ហភាព (°C)" : "Temperature (°C)"}
+                </label>
+                <input
+                  type="number"
+                  min={25}
+                  max={50}
+                  value={editFormData.baseTemp}
+                  onChange={(e) => setEditFormData({ ...editFormData, baseTemp: Number(e.target.value) })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                  {language === "km" ? "សំណើម (%)" : "Humidity (%)"}
+                </label>
+                <input
+                  type="number"
+                  min={20}
+                  max={100}
+                  value={editFormData.humidity}
+                  onChange={(e) => setEditFormData({ ...editFormData, humidity: Number(e.target.value) })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Address En & Km */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                  Address (English)
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.addressEn}
+                  onChange={(e) => setEditFormData({ ...editFormData, addressEn: e.target.value })}
+                  placeholder="Street / District address in English"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                  អាសយដ្ឋាន (ខ្មែរ)
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.addressKm}
+                  onChange={(e) => setEditFormData({ ...editFormData, addressKm: e.target.value })}
+                  placeholder="ផ្លូវ / ខណ្ឌ អាសយដ្ឋានជាភាសាខ្មែរ"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 font-khmer"
+                />
+              </div>
+            </div>
+
+            {/* Row 4: Risk Description Km */}
+            <div>
+              <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                {language === "km" ? "ការវិភាគហានិភ័យកម្ដៅ (Khmer & English Description)" : "Workplace Heat Exposure Risk Description"}
+              </label>
+              <textarea
+                rows={2}
+                value={language === "km" ? editFormData.descriptionKm : editFormData.descriptionEn}
+                onChange={(e) => {
+                  if (language === "km") {
+                    setEditFormData({ ...editFormData, descriptionKm: e.target.value });
+                  } else {
+                    setEditFormData({ ...editFormData, descriptionEn: e.target.value });
+                  }
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            {/* Row 5: Actionable Safety Advice */}
+            <div>
+              <label className="block text-xs font-black uppercase text-gray-700 mb-1">
+                {language === "km" ? "វិធានការការពារសុវត្ថិភាព (Safety Advice)" : "Mandatory Safety Action Advice"}
+              </label>
+              <textarea
+                rows={2}
+                value={language === "km" ? editFormData.adviceKm : editFormData.adviceEn}
+                onChange={(e) => {
+                  if (language === "km") {
+                    setEditFormData({ ...editFormData, adviceKm: e.target.value });
+                  } else {
+                    setEditFormData({ ...editFormData, adviceEn: e.target.value });
+                  }
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            {/* Action Buttons: Save & Delete */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => handleDeleteLocation(editFormData.id)}
+                className="px-4 py-2.5 rounded-xl text-xs font-black bg-red-100 hover:bg-red-200 text-red-700 transition flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{language === "km" ? "លុបទីតាំងនេះ" : "Delete Location"}</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition"
+                >
+                  {language === "km" ? "បោះបង់" : "Cancel"}
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black bg-purple-600 hover:bg-purple-700 text-white transition flex items-center gap-2 shadow-md shadow-purple-600/30"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{language === "km" ? "រក្សាទុកការកែប្រែ" : "Save Changes"}</span>
+                </button>
+              </div>
+            </div>
+
+          </form>
+
+        </div>
+      )}
+
+      {/* 4. GOOGLE MAPS PLACE INSPECTION CARD (Synchronized with Map Pin Selection) */}
       {isDetailsOpen && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-heat-300 shadow-xl space-y-6 animate-fadeIn">
           
@@ -934,19 +1417,33 @@ export default function CambodiaHeatMap() {
                 )}
               </div>
 
-              <h3 className="text-2xl sm:text-3xl font-black text-gray-900 leading-snug">
-                {language === "km" ? (
-                  <>
-                    <span>{selectedLocation.nameKm}</span>{" "}
-                    <span className="text-lg text-gray-500 font-bold font-sans">({selectedLocation.nameEn})</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{selectedLocation.nameEn}</span>{" "}
-                    <span className="text-lg text-gray-500 font-bold font-khmer">({selectedLocation.nameKm})</span>
-                  </>
-                )}
-              </h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 leading-snug">
+                  {language === "km" ? (
+                    <>
+                      <span>{selectedLocation.nameKm}</span>{" "}
+                      <span className="text-lg text-gray-500 font-bold font-sans">({selectedLocation.nameEn})</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{selectedLocation.nameEn}</span>{" "}
+                      <span className="text-lg text-gray-500 font-bold font-khmer">({selectedLocation.nameKm})</span>
+                    </>
+                  )}
+                </h3>
+
+                {/* Edit Button for this specific location */}
+                <button
+                  onClick={() => {
+                    setEditFormData(selectedLocation);
+                    setIsFormOpen(true);
+                  }}
+                  className="p-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 transition"
+                  title="Edit this location"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+              </div>
 
               <p className="text-xs sm:text-sm text-gray-500 font-semibold mt-1">
                 📍 {language === "km" ? selectedLocation.addressKm : selectedLocation.addressEn}
@@ -1030,11 +1527,16 @@ export default function CambodiaHeatMap() {
 
           {/* Quick Location Switcher Pills */}
           <div>
-            <div className="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
-              {language === "km" ? "ទីតាំងអាទិភាពផ្សេងទៀតក្នុងភ្នំពេញ៖" : "Quick Switch Priority Phnom Penh Hubs:"}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase tracking-wider text-gray-500">
+                {language === "km" ? "ទីតាំងទាំងអស់ (ចុចដើម្បីមើល ឬកែសម្រួល)៖" : "All Locations (Click to view or edit):"}
+              </span>
+              <span className="text-xs font-bold text-gray-400">
+                {locations.length} {language === "km" ? "ទីតាំង" : "locations"}
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {workerLocations.map((loc) => (
+              {locations.map((loc) => (
                 <button
                   key={loc.id}
                   onClick={() => handleSelectLoc(loc)}
