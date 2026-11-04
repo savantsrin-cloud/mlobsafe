@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-white: #FFFFFF;
+  --color-bg: #F8FAFC;
+  --color-orange: #EA580C;
+  --color-orange-light: #FFEDD5;
+  --color-lightblue: #0284C7;
+  --color-lightblue-light: #E0F2FE;
+  --color-danger: #DC2626;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: #1E293B;
+  font-family: 'Kantumruy Pro', 'Battambang', var(--font-kantumruy), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+:lang(km),
+html[lang="km"] {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  text-rendering: optimizeLegibility;
+}
+
+:lang(km),
+html[lang="km"],
+html[lang="km"] * {
+  font-family: 'Kantumruy Pro', 'Battambang', var(--font-kantumruy), sans-serif !important;
+  letter-spacing: normal !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Soft Animations */
+@keyframes pulse-gentle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.03); opacity: 0.95; }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2.5s infinite ease-in-out;
+}
+
+/* Leaflet Google Maps Style Custom Pins */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+  z-index: 1;
+}
+
+.custom-google-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
+.gm-pin-container:hover {
+  transform: translate(-50%, -106%) scale(1.08) !important;
+  z-index: 999;
+}
+
+.gm-selected {
+  transform: translate(-50%, -108%) scale(1.12) !important;
+  z-index: 1000;
+}
+
+/* Google Maps Leaflet Popup Styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 4px 6px !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
