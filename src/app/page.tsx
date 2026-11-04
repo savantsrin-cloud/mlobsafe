@@ -10,7 +10,17 @@ import HeatQuiz from "@/components/HeatQuiz";
 import SeasonalTimeline from "@/components/SeasonalTimeline";
 import CoreIconsBar from "@/components/CoreIconsBar";
 import JobTipsFilter from "@/components/JobTipsFilter";
-import CambodiaHeatMap from "@/components/CambodiaHeatMap";
+import dynamic from "next/dynamic";
+
+const CambodiaHeatMap = dynamic(() => import("@/components/CambodiaHeatMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[620px] bg-[#0f1117] rounded-3xl flex flex-col items-center justify-center text-white space-y-3 border-2 border-gray-800">
+      <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="text-sm font-bold text-gray-300">Loading Cambodia Heat Radar Map...</div>
+    </div>
+  ),
+});
 import { 
   HeartPulse, 
   ShieldCheck, 
@@ -309,14 +319,13 @@ export default function HomePage() {
             </button>
 
             <button
-              onClick={() => setActiveToolTab("map")}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base font-extrabold transition-all shadow-sm break-words ${
-                activeToolTab === "map"
-                  ? "bg-purple-600 text-white shadow-purple-600/25 ring-2 ring-purple-600 ring-offset-2"
-                  : "bg-white text-gray-800 hover:bg-purple-50 border border-gray-200"
-              }`}
+              onClick={() => {
+                const el = document.getElementById("cambodia-heat-map");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base font-extrabold transition-all shadow-sm break-words bg-white text-gray-800 hover:bg-purple-50 border border-gray-200"
             >
-              <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-current flex-shrink-0" />
+              <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
               <span>{language === "km" ? "៣. ផែនទីកម្ដៅកម្ពុជា" : "3. Cambodia Heat Map"}</span>
             </button>
 
@@ -361,8 +370,21 @@ export default function HomePage() {
           )}
 
           {activeToolTab === "map" && (
-            <div id="heat-map-tool" className="animate-fadeIn">
-              <CambodiaHeatMap />
+            <div id="heat-map-tool" className="p-8 text-center bg-white rounded-3xl border-2 border-heat-200 space-y-4">
+              <Compass className="w-12 h-12 text-heat-600 mx-auto animate-spin-slow" />
+              <h3 className="text-xl font-black text-gray-900">
+                {language === "km" ? "ផែនទីកម្ដៅស្ថិតនៅផ្នែកខាងលើ" : "Interactive Heat Map Section"}
+              </h3>
+              <p className="text-sm text-gray-600 font-medium">
+                {language === "km" ? "ចុចប៊ូតុងខាងក្រោមដើម្បីទៅកាន់ផែនទីកម្ដៅ Zoom Earth ដោយផ្ទាល់" : "Click below to jump directly to the Zoom Earth Heat Radar Map"}
+              </p>
+              <a
+                href="#cambodia-heat-map"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-heat-600 text-white font-black hover:bg-heat-700 transition shadow-md"
+              >
+                <span>{language === "km" ? "មើលផែនទីកម្ដៅឥឡូវនេះ" : "View Live Heat Radar Map"}</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           )}
 

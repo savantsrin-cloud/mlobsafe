@@ -4,7 +4,17 @@ import React from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { heatDataAndStatistics, whyWorkersCantRest } from "@/data/heatStressTranslations";
 import SeasonalTimeline from "@/components/SeasonalTimeline";
-import CambodiaHeatMap from "@/components/CambodiaHeatMap";
+import dynamic from "next/dynamic";
+
+const CambodiaHeatMap = dynamic(() => import("@/components/CambodiaHeatMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[620px] bg-[#0f1117] rounded-3xl flex flex-col items-center justify-center text-white space-y-3 border-2 border-gray-800">
+      <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="text-sm font-bold text-gray-300">Loading Cambodia Heat Radar Map...</div>
+    </div>
+  ),
+});
 import { 
   BarChart3, 
   DollarSign, 

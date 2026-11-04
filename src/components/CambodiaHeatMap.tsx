@@ -33,7 +33,18 @@ import {
   MapPin,
   X
 } from "lucide-react";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+// Resilient Leaflet resolver across Next.js bundlers and browsers
+const getL = () => {
+  if (typeof window === "undefined") return null;
+  const anyL = L as any;
+  if (anyL && typeof anyL.map === "function") return anyL;
+  if (anyL && anyL.default && typeof anyL.default.map === "function") return anyL.default;
+  if ((window as any).L && typeof (window as any).L.map === "function") return (window as any).L;
+  return anyL;
+};
 
 type ForecastLayer = "wet_bulb" | "temperature" | "wind" | "satellite";
 type SectorFilter = "all" | "garment" | "transport" | "food_seller";
@@ -251,14 +262,21 @@ export default function CambodiaHeatMap() {
     return canvas.toDataURL();
   };
 
-  // Initialize & Update Leaflet with Zoom Earth Style
+  // 1. Initialize Leaflet Map once on mount
   useEffect(() => {
     if (!isClient || !mapContainerRef.current) return;
+    const Leaflet = getL();
+    if (!Leaflet || typeof Leaflet.map !== "function") return;
 
-    const L = require("leaflet");
+    // Clean up any stale leaflet ID to prevent "Map container is already initialized"
+    if (mapContainerRef.current) {
+      if ((mapContainerRef.current as any)._leaflet_id) {
+        delete (mapContainerRef.current as any)._leaflet_id;
+      }
+    }
 
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
+    if (!mapInstanceRef.current && mapContainerRef.current) {
+      const map = Leaflet.map(mapContainerRef.current, {
         center: [12.5657, 104.9910],
         zoom: 7,
         minZoom: 5,
@@ -268,13 +286,48 @@ export default function CambodiaHeatMap() {
       });
 
       mapInstanceRef.current = map;
+
+      // Force proper container size calculation
+      setTimeout(() => {
+        try {
+          map.invalidateSize();
+        } catch (e) {
+          // ignore
+        }
+      }, 150);
     }
 
+    return () => {
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {
+          // ignore
+        }
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [isClient]);
+
+  // 2. Update Map Layers, Thermal Overlay, and City Badges
+  useEffect(() => {
+    if (!isClient || !mapInstanceRef.current) return;
+    const Leaflet = getL();
     const map = mapInstanceRef.current;
+    if (!Leaflet || !map) return;
+
+    try {
+      map.invalidateSize();
+    } catch (e) {
+      // ignore
+    }
 
     // 1. Base Tile Layer
     if (tileLayerRef.current) {
-      map.removeLayer(tileLayerRef.current);
+      try {
+        map.removeLayer(tileLayerRef.current);
+      } catch (e) {}
+      tileLayerRef.current = null;
     }
 
     const tileUrl = activeLayer === "satellite"
@@ -283,14 +336,17 @@ export default function CambodiaHeatMap() {
 
     const subdomains = activeLayer === "satellite" ? ["server"] : ["a", "b", "c", "d"];
 
-    tileLayerRef.current = L.tileLayer(tileUrl, {
+    tileLayerRef.current = Leaflet.tileLayer(tileUrl, {
       subdomains,
       maxZoom: 18,
     }).addTo(map);
 
     // 2. Continuous Glowing Thermal Radar Image Overlay (Zoom Earth Weather Heatmap)
     if (heatOverlayRef.current) {
-      map.removeLayer(heatOverlayRef.current);
+      try {
+        map.removeLayer(heatOverlayRef.current);
+      } catch (e) {}
+      heatOverlayRef.current = null;
     }
 
     if (activeLayer === "wet_bulb" || activeLayer === "temperature") {
@@ -300,7 +356,7 @@ export default function CambodiaHeatMap() {
           [9.6, 101.4],
           [15.4, 108.4]
         ];
-        heatOverlayRef.current = L.imageOverlay(radarDataUrl, bounds, {
+        heatOverlayRef.current = Leaflet.imageOverlay(radarDataUrl, bounds, {
           opacity: activeLayer === "temperature" ? 0.80 : 0.85,
           interactive: false,
         }).addTo(map);
@@ -308,7 +364,11 @@ export default function CambodiaHeatMap() {
     }
 
     // 3. Zoom Earth Style City / Province Badges on Map
-    Object.values(markersRef.current).forEach((marker: any) => map.removeLayer(marker));
+    Object.values(markersRef.current).forEach((marker: any) => {
+      try {
+        map.removeLayer(marker);
+      } catch (e) {}
+    });
     markersRef.current = {};
 
     filteredRegions.forEach((region) => {
@@ -365,14 +425,14 @@ export default function CambodiaHeatMap() {
         </div>
       `;
 
-      const customIcon = L.divIcon({
+      const customIcon = Leaflet.divIcon({
         className: "custom-zoomearth-pin",
         html: badgeHtml,
         iconSize: [120, 28],
         iconAnchor: [60, 14],
       });
 
-      const marker = L.marker([region.lat, region.lng], { icon: customIcon })
+      const marker = Leaflet.marker([region.lat, region.lng], { icon: customIcon })
         .addTo(map)
         .on("click", () => {
           setSelectedRegionId(region.id);
