@@ -3,84 +3,70 @@ import {
   MapPin, 
   Thermometer, 
   Wind, 
-  AlertTriangle, 
-  ShieldCheck, 
+  CloudRain, 
+  CloudLightning,
   Sparkles, 
-  Search, 
   ChevronRight,
-  Layers,
-  LayoutGrid,
-  Map as MapIcon
+  Maximize2,
+  RefreshCw,
+  Info,
+  ShieldCheck,
+  Search
 } from 'lucide-react';
 import { cambodiaProvinces, getAqiCategory } from '../data/provincesData';
 import { translations } from '../data/translations';
 
 export default function CambodiaMap({ lang, onSelectProvinceForCalculator }) {
   const t = translations[lang].mapSection;
-  const [activeMode, setActiveMode] = useState('heat'); // 'heat' or 'aqi'
-  const [viewStyle, setViewStyle] = useState('map'); // 'map' or 'grid'
+  const [activeOverlay, setActiveOverlay] = useState('temp'); // 'temp', 'pm2_5', 'wind', 'rain'
   const [selectedProvinceId, setSelectedProvinceId] = useState('phnom-penh');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('all');
+  const [iframeKey, setIframeKey] = useState(0);
 
   const selectedProvince = cambodiaProvinces.find(p => p.id === selectedProvinceId) || cambodiaProvinces[0];
   const aqiInfo = getAqiCategory(selectedProvince.aqi, lang);
 
-  // Group provinces by region
-  const regions = [
-    { id: 'all', nameKm: 'ខេត្តទាំងអស់ (២៥)', nameEn: 'All (25)' },
-    { id: 'Central', nameKm: 'កណ្ដាល & រាជធានី', nameEn: 'Central' },
-    { id: 'Northwest', nameKm: 'ភាគពាយ័ព្យ', nameEn: 'Northwest' },
-    { id: 'Coast', nameKm: 'តំបន់ឆ្នេរ', nameEn: 'Coastal' },
-    { id: 'Northeast', nameKm: 'ភាគឦសាន', nameEn: 'Northeast' },
-    { id: 'South East', nameKm: 'ភាគអាគ្នេយ៍', nameEn: 'Southeast' }
+  // Dynamic Windy Embed URL centered on Cambodia (Lat: 12.5657, Lon: 104.9910, Zoom: 6)
+  const windyEmbedUrl = `https://embed.windy.com/embed2.html?lat=12.5657&lon=104.9910&detailLat=${selectedProvince.temp ? '11.5564' : '12.5657'}&detailLon=104.9282&width=100%&height=520&zoom=6&level=surface&overlay=${activeOverlay}&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=%C2%B0C&radarRange=-1`;
+
+  const layerOptions = [
+    { 
+      id: 'temp', 
+      labelKm: '🌡️ សីតុណ្ហភាព & កម្តៅ (Temperature)', 
+      labelEn: '🌡️ Temperature & Heat',
+      activeColor: 'bg-orange-600 text-white' 
+    },
+    { 
+      id: 'pm2_5', 
+      labelKm: '🍃 ធូលី PM2.5 & ខ្យល់ (Air Quality)', 
+      labelEn: '🍃 PM2.5 Air Quality',
+      activeColor: 'bg-emerald-600 text-white' 
+    },
+    { 
+      id: 'wind', 
+      labelKm: '💨 ចរន្តខ្យល់ (Wind Stream)', 
+      labelEn: '💨 Wind Streams',
+      activeColor: 'bg-sky-600 text-white' 
+    },
+    { 
+      id: 'rain', 
+      labelKm: '🌧️ ភ្លៀងធ្លាក់ (Rainfall)', 
+      labelEn: '🌧️ Rain Accumulation',
+      activeColor: 'bg-indigo-600 text-white' 
+    }
   ];
 
-  const filteredProvinces = cambodiaProvinces.filter(p => {
-    const matchesSearch = !searchQuery.trim() || 
-      p.nameKm.toLowerCase().includes(searchQuery.toLowerCase().trim()) || 
-      p.nameEn.toLowerCase().includes(searchQuery.toLowerCase().trim());
-    
-    const matchesRegion = selectedRegion === 'all' || 
-      p.region.toLowerCase().includes(selectedRegion.toLowerCase());
-
-    return matchesSearch && matchesRegion;
-  });
-
-  const getProvinceHeatIndex = (temp, humidity) => {
-    const T = (temp * 9/5) + 32;
-    const RH = humidity;
-    let HI = 0.5 * (T + 61.0 + ((T - 68.0) * 1.2) + (RH * 0.094));
-    if (HI >= 80) {
-      HI = -42.379 + 2.04901523 * T + 10.14333127 * RH - 0.22475541 * T * RH
-        - 0.00683783 * T * T - 0.05481717 * RH * RH + 0.00122874 * T * T * RH
-        + 0.00085282 * T * RH * RH - 0.00000199 * T * T * RH * RH;
-    }
-    return Math.round((HI - 32) * 5/9);
-  };
-
-  const getHeatBadge = (temp) => {
-    if (temp >= 40) return { bg: 'bg-red-600', text: 'text-white', border: 'border-red-700', fill: '#DC2626' };
-    if (temp >= 38) return { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600', fill: '#F97316' };
-    if (temp >= 36) return { bg: 'bg-amber-500', text: 'text-white', border: 'border-amber-600', fill: '#F59E0B' };
-    return { bg: 'bg-emerald-500', text: 'text-white', border: 'border-emerald-600', fill: '#10B981' };
-  };
-
-  const getAqiBadge = (aqi) => {
-    if (aqi > 150) return { bg: 'bg-red-600', text: 'text-white', border: 'border-red-700', fill: '#DC2626' };
-    if (aqi > 100) return { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600', fill: '#F97316' };
-    if (aqi > 50) return { bg: 'bg-yellow-400', text: 'text-slate-900', border: 'border-yellow-500', fill: '#EAB308' };
-    return { bg: 'bg-emerald-500', text: 'text-white', border: 'border-emerald-600', fill: '#10B981' };
+  const handleRefreshMap = () => {
+    setIframeKey(prev => prev + 1);
   };
 
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm relative overflow-hidden">
-      {/* Section Header */}
+      {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-bold mb-3">
             <Sparkles className="w-3.5 h-3.5 text-orange-600" />
-            <span>{lang === 'km' ? 'ផែនទីពេលវេលាជាក់ស្តែង (Live Map)' : 'Live Environmental Map'}</span>
+            <span>{lang === 'km' ? 'ផែនទីផ្ទាល់ពីផ្កាយរណប (Live Satellite Map)' : 'Live Satellite Weather Map'}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             {t.title}
@@ -90,354 +76,144 @@ export default function CambodiaMap({ lang, onSelectProvinceForCalculator }) {
           </p>
         </div>
 
-        {/* View Style (Map vs Regional Grid) & Mode Switchers */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Map vs Grid View */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-2xl border border-slate-200">
-            <button
-              onClick={() => setViewStyle('map')}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewStyle === 'map'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <MapIcon className="w-3.5 h-3.5" />
-              <span>{lang === 'km' ? 'ផែនទី SVG' : 'Map View'}</span>
-            </button>
-            <button
-              onClick={() => setViewStyle('grid')}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                viewStyle === 'grid'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>{lang === 'km' ? 'តារាងខេត្ត (២៥)' : 'Grid (25)'}</span>
-            </button>
-          </div>
+        {/* Quick Map Reload */}
+        <button
+          onClick={handleRefreshMap}
+          className="inline-flex items-center gap-2 self-start lg:self-auto text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl border border-slate-200 transition-colors"
+          title="Reload live satellite feed"
+        >
+          <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+          <span>{lang === 'km' ? 'ផ្ទុកទិន្នន័យឡើងវិញ' : 'Refresh Live Feed'}</span>
+        </button>
+      </div>
 
-          {/* Metric Toggle: Heat vs AQI */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+      {/* Layer Filter Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 my-5">
+        <div className="flex flex-wrap items-center gap-2">
+          {layerOptions.map((opt) => (
             <button
-              onClick={() => setActiveMode('heat')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMode === 'heat'
-                  ? 'bg-orange-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              key={opt.id}
+              onClick={() => setActiveOverlay(opt.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeOverlay === opt.id
+                  ? `${opt.activeColor} shadow-xs scale-102`
+                  : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700'
               }`}
             >
-              <Thermometer className="w-3.5 h-3.5" />
-              <span>{lang === 'km' ? 'កម្តៅ (°C)' : 'Heat (°C)'}</span>
+              {lang === 'km' ? opt.labelKm : opt.labelEn}
             </button>
-            <button
-              onClick={() => setActiveMode('aqi')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMode === 'aqi'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Wind className="w-3.5 h-3.5" />
-              <span>AQI</span>
-            </button>
-          </div>
+          ))}
+        </div>
+
+        <span className="text-[11px] text-slate-400 font-medium">
+          Powered by ECMWF & Windy.com
+        </span>
+      </div>
+
+      {/* Real Live Interactive Windy Map Embed */}
+      <div className="relative w-full rounded-3xl overflow-hidden border-2 border-slate-200 shadow-md bg-slate-950">
+        <iframe
+          key={`${activeOverlay}-${iframeKey}`}
+          title="Cambodia Live Heat and Weather Map"
+          width="100%"
+          height="520"
+          src={windyEmbedUrl}
+          frameBorder="0"
+          className="w-full h-[450px] sm:h-[520px] rounded-3xl block"
+          loading="lazy"
+        />
+
+        {/* Floating Quick Instructions Banner */}
+        <div className="absolute top-3 left-3 z-10 hidden sm:flex items-center gap-2 bg-black/75 backdrop-blur-md text-white text-[11px] px-3 py-1.5 rounded-xl border border-white/20">
+          <Info className="w-3.5 h-3.5 text-orange-400" />
+          <span>{lang === 'km' ? 'អាចអូសពង្រីក/បង្រួម (Zoom/Pan) និងចុច Play នៅខាងក្រោមដើម្បីមើលចរន្តកម្ដៅ' : 'Interactive: Zoom, pan, or hit Play at bottom to view heat forecast'}</span>
         </div>
       </div>
 
-      {/* Main Grid: Map or Grid View (7 cols) + Selected Province Details (5 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
-        
-        {/* Left Side: Map or Province Grid (7 cols) */}
-        <div className="lg:col-span-7">
-          {viewStyle === 'map' ? (
-            /* Interactive SVG Cambodia Map */
-            <div className="bg-[#FAF5EB] rounded-3xl p-4 sm:p-6 border border-amber-200/80 relative flex flex-col justify-between overflow-hidden shadow-inner">
-              <div className="flex items-center justify-between text-xs text-amber-900/60 font-bold mb-2">
-                <span>📍 ចុចលើឈ្មោះខេត្តដើម្បីមើលព័ត៌មានលម្អិត</span>
-                <span className="hidden sm:inline">ព្រះរាជាណាចក្រកម្ពុជា • CAMBODIA</span>
-              </div>
+      {/* Bottom Province Inspection & Quick Selection Bar */}
+      <div className="mt-8 bg-slate-50/80 rounded-3xl p-6 border border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+            <MapPin className="w-4 h-4 text-orange-600" />
+            <span>{lang === 'km' ? 'ជ្រើសរើសខេត្តដើម្បីមើលព័ត៌មានលម្អិត៖' : 'Inspect Province Specific Data:'}</span>
+          </span>
 
-              <div className="relative w-full h-[380px] sm:h-[430px] flex items-center justify-center">
-                <svg
-                  viewBox="120 90 680 510"
-                  className="w-full h-full drop-shadow-sm select-none"
-                >
-                  {/* Detailed Cambodia Land Silhouette */}
-                  <path
-                    d="M 190,260 
-                       C 200,200 230,160 290,140 
-                       C 350,120 440,125 500,135 
-                       C 560,145 640,140 700,170 
-                       C 750,200 780,260 770,330 
-                       C 760,400 690,440 640,490 
-                       C 600,530 520,550 460,570 
-                       C 400,590 350,580 310,550 
-                       C 270,520 230,480 240,420 
-                       C 230,370 180,330 170,290 Z"
-                    fill="#EFE4CF"
-                    stroke="#D6C4A5"
-                    strokeWidth="2.5"
-                    strokeLinejoin="round"
-                  />
-
-                  {/* Tonle Sap Lake */}
-                  <ellipse
-                    cx="360"
-                    cy="320"
-                    rx="70"
-                    ry="30"
-                    fill="#BAE6FD"
-                    stroke="#7DD3FC"
-                    strokeWidth="1.5"
-                    transform="rotate(-25, 360, 320)"
-                    opacity="0.9"
-                  />
-                  <text
-                    x="335"
-                    y="325"
-                    fontSize="11"
-                    fill="#0284C7"
-                    fontWeight="bold"
-                    opacity="0.8"
-                  >
-                    បឹងទន្លេសាប
-                  </text>
-
-                  {/* Mekong River */}
-                  <path
-                    d="M 620,140 Q 610,240 580,310 T 540,390 T 490,440 T 490,560"
-                    fill="none"
-                    stroke="#7DD3FC"
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                    opacity="0.8"
-                  />
-
-                  {/* Province Interactive Hotspot Nodes */}
-                  {cambodiaProvinces.map((prov) => {
-                    const isSelected = prov.id === selectedProvinceId;
-                    const badge = activeMode === 'heat' ? getHeatBadge(prov.temp) : getAqiBadge(prov.aqi);
-
-                    return (
-                      <g
-                        key={prov.id}
-                        onClick={() => setSelectedProvinceId(prov.id)}
-                        className="cursor-pointer transition-transform hover:scale-110"
-                        transform={`translate(${prov.x}, ${prov.y})`}
-                      >
-                        {isSelected && (
-                          <circle
-                            r="18"
-                            fill="none"
-                            stroke={badge.fill}
-                            strokeWidth="2.5"
-                            className="animate-ping"
-                            opacity="0.6"
-                          />
-                        )}
-
-                        <circle
-                          r={isSelected ? "13" : "10"}
-                          fill={badge.fill}
-                          stroke="#FFFFFF"
-                          strokeWidth={isSelected ? "3" : "2"}
-                          className="shadow-sm transition-all"
-                        />
-
-                        <text
-                          textAnchor="middle"
-                          dy="4"
-                          fontSize={isSelected ? "9" : "8"}
-                          fill="#FFFFFF"
-                          fontWeight="bold"
-                        >
-                          {activeMode === 'heat' ? `${prov.temp}°` : prov.aqi}
-                        </text>
-
-                        <text
-                          textAnchor="middle"
-                          dy="22"
-                          fontSize="9"
-                          fill="#1E293B"
-                          fontWeight={isSelected ? "bold" : "600"}
-                          className="select-none pointer-events-none drop-shadow-xs"
-                        >
-                          {lang === 'km' ? prov.nameKm.replace('ខេត្ត', '').replace('រាជធានី', '') : prov.nameEn}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </svg>
-              </div>
-
-              {/* Map Color Legend Footer */}
-              <div className="pt-3 border-t border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <span className="font-bold text-slate-700">
-                  {t.legendTitle}
-                </span>
-                {activeMode === 'heat' ? (
-                  <div className="flex items-center gap-3 text-[11px]">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> &lt;36°C</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> 36-37°C</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> 38-39°C</span>
-                    <span className="flex items-center gap-1 font-bold text-red-700"><span className="w-2.5 h-2.5 rounded-full bg-red-600" /> ≥40°C</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 text-[11px]">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> 0-50 (Good)</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400" /> 51-100</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> 101-150</span>
-                    <span className="flex items-center gap-1 font-bold text-red-700"><span className="w-2.5 h-2.5 rounded-full bg-red-600" /> 151+</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* All 25 Provinces Grid View */
-            <div className="bg-slate-50/80 rounded-3xl p-5 border border-slate-200">
-              {/* Region Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-1.5 mb-4">
-                {regions.map(r => (
-                  <button
-                    key={r.id}
-                    onClick={() => setSelectedRegion(r.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      selectedRegion === r.id
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-                    }`}
-                  >
-                    {lang === 'km' ? r.nameKm : r.nameEn}
-                  </button>
-                ))}
-              </div>
-
-              {/* 25 Province Cards Scrollable Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
-                {filteredProvinces.map(prov => {
-                  const isSelected = prov.id === selectedProvinceId;
-                  const heatBadge = getHeatBadge(prov.temp);
-                  const aqiBadge = getAqiBadge(prov.aqi);
-
-                  return (
-                    <button
-                      key={prov.id}
-                      onClick={() => setSelectedProvinceId(prov.id)}
-                      className={`p-3 rounded-2xl text-left border transition-all flex flex-col justify-between ${
-                        isSelected
-                          ? 'bg-orange-50 border-orange-500 shadow-xs ring-1 ring-orange-400'
-                          : 'bg-white border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="font-bold text-xs sm:text-sm text-slate-900 truncate">
-                        {lang === 'km' ? prov.nameKm : prov.nameEn}
-                      </div>
-                      <div className="flex items-center justify-between gap-1 mt-2 text-xs">
-                        <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-[11px] ${heatBadge.bg} ${heatBadge.text}`}>
-                          {prov.temp}°C
-                        </span>
-                        <span className="text-[10px] text-slate-500 font-mono">
-                          AQI {prov.aqi}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <span className="text-xs font-bold text-orange-800 bg-orange-100 px-3 py-1 rounded-full border border-orange-200">
+            {lang === 'km' ? selectedProvince.nameKm : selectedProvince.nameEn}
+          </span>
         </div>
 
-        {/* Right Side: Selected Province Detailed Card (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-5">
-          <div className="bg-slate-50 rounded-3xl p-6 sm:p-7 border border-slate-200">
-            {/* Search Dropdown / Input */}
-            <div className="mb-4">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={lang === 'km' ? '🔍 ស្វែងរកខេត្តទាំង ២៥...' : '🔍 Search 25 provinces...'}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
+        {/* Quick Province Selector Pills */}
+        <div className="flex flex-wrap items-center gap-2 my-4">
+          {cambodiaProvinces.slice(0, 8).map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setSelectedProvinceId(p.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                p.id === selectedProvinceId
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'
+              }`}
+            >
+              {lang === 'km' ? p.nameKm : p.nameEn}
+            </button>
+          ))}
+          <span className="text-xs text-slate-400 italic">
+            {lang === 'km' ? '+ ១៧ ខេត្តទៀតក្នុងឧបករណ៍គណនា' : '+ 17 more in calculator'}
+          </span>
+        </div>
+
+        {/* Selected Province Metrics & Health Advisory Card */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          {/* Temperature & Real Feel */}
+          <div className="bg-white p-4 rounded-2xl border border-orange-200 shadow-2xs">
+            <span className="text-xs text-slate-500 block">
+              {t.tempLabel}
+            </span>
+            <div className="text-2xl sm:text-3xl font-black text-orange-600 font-mono my-0.5">
+              {selectedProvince.temp}°C
             </div>
-
-            {/* Province Header */}
-            <div className="pb-4 border-b border-slate-200 flex items-start justify-between gap-3">
-              <div>
-                <span className="text-xs font-bold text-orange-600 uppercase tracking-widest">
-                  {selectedProvince.region} Region
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-slate-900">
-                  {lang === 'km' ? selectedProvince.nameKm : selectedProvince.nameEn}
-                </h3>
-              </div>
-              <div className="p-2.5 rounded-2xl bg-white shadow-xs border border-slate-200">
-                <MapPin className="w-5 h-5 text-orange-600" />
-              </div>
-            </div>
-
-            {/* Metrics Dual Display: Heat & AQI */}
-            <div className="grid grid-cols-2 gap-4 my-4">
-              {/* Temperature Card */}
-              <div className="bg-white p-4 rounded-2xl border border-orange-200 shadow-2xs">
-                <span className="text-xs text-slate-500 block">
-                  {t.tempLabel}
-                </span>
-                <div className="text-3xl sm:text-4xl font-black text-orange-600 font-mono my-0.5">
-                  {selectedProvince.temp}°C
-                </div>
-                <div className="text-[11px] text-slate-500">
-                  {t.realFeelLabel}: <strong className="text-slate-800 font-mono">{getProvinceHeatIndex(selectedProvince.temp, selectedProvince.humidity)}°C</strong>
-                </div>
-              </div>
-
-              {/* AQI Air Quality Card */}
-              <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-2xs">
-                <span className="text-xs text-slate-500 block">
-                  {t.aqiLabel}
-                </span>
-                <div className="text-3xl sm:text-4xl font-black text-emerald-700 font-mono my-0.5">
-                  {selectedProvince.aqi}
-                </div>
-                <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${aqiInfo.color}`}>
-                  {lang === 'km' ? aqiInfo.statusKm : aqiInfo.statusEn}
-                </span>
-              </div>
-            </div>
-
-            {/* Worker Safety Advisory for this Specific Province */}
-            <div className="bg-amber-50/80 p-4 rounded-2xl border border-amber-200">
-              <h4 className="font-bold text-xs uppercase tracking-wider text-amber-900 mb-1 flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <span>{t.workerAdviceTitle}</span>
-              </h4>
-              <p className="text-xs sm:text-sm text-amber-950 leading-relaxed">
-                {lang === 'km' ? selectedProvince.workerAlertKm : selectedProvince.workerAlertEn}
-              </p>
+            <div className="text-[11px] text-slate-500">
+              {lang === 'km' ? 'កម្តៅជាក់ស្តែង៖' : 'Real Feel:'} <strong className="text-slate-800 font-mono">
+                {Math.round(selectedProvince.temp + (selectedProvince.humidity > 60 ? 4 : 2))}°C
+              </strong>
             </div>
           </div>
 
-          {/* Action: Sync with Heat Risk Calculator */}
-          {onSelectProvinceForCalculator && (
-            <button
-              onClick={() => onSelectProvinceForCalculator(selectedProvince.temp, selectedProvince.humidity)}
-              className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-orange-600 text-white font-bold text-sm py-3.5 px-6 rounded-2xl transition-all shadow-md group"
-            >
-              <Thermometer className="w-4 h-4 text-orange-400 group-hover:text-white" />
-              <span>
-                {lang === 'km' 
-                  ? `បញ្ចូលទិន្នន័យ ${selectedProvince.nameKm} ទៅការគណនាកម្ដៅ` 
-                  : `Calculate Heat Risk for ${selectedProvince.nameEn}`}
+          {/* AQI Score */}
+          <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-2xs">
+            <span className="text-xs text-slate-500 block">
+              {t.aqiLabel}
+            </span>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-mono my-0.5">
+              {selectedProvince.aqi}
+            </div>
+            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${aqiInfo.color}`}>
+              {lang === 'km' ? aqiInfo.statusKm : aqiInfo.statusEn}
+            </span>
+          </div>
+
+          {/* Worker Safety Advisory for Selected Province */}
+          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 flex flex-col justify-between">
+            <div>
+              <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block mb-1">
+                {t.workerAdviceTitle}
               </span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
+              <p className="text-xs text-amber-950 leading-relaxed">
+                {lang === 'km' ? selectedProvince.workerAlertKm : selectedProvince.workerAlertEn}
+              </p>
+            </div>
+
+            {onSelectProvinceForCalculator && (
+              <button
+                onClick={() => onSelectProvinceForCalculator(selectedProvince.temp, selectedProvince.humidity)}
+                className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-orange-700 hover:text-orange-900 underline self-start"
+              >
+                <span>{lang === 'km' ? 'គណនាហានិភ័យសម្រាប់ខេត្តនេះ' : 'Calculate Risk for this Province'}</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

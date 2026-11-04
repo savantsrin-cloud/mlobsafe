@@ -6,10 +6,9 @@ export default function ShareModal({ isOpen, onClose, lang }) {
 
   if (!isOpen) return null;
 
-  // Active public tunnel URL
-  const publicTunnelUrl = "https://tidy-dingo-28.loca.lt";
-  const localWifiUrl = "http://192.168.1.4:3060";
-  const tunnelPassword = "119.13.156.204";
+  // Instant password-free public URL
+  const publicTunnelUrl = "https://fc44868063b554.lhr.life";
+  const localWifiUrl = "http://10.4.37.132:3060";
 
   const handleCopy = (text, type) => {
     if (navigator.clipboard) {
@@ -52,20 +51,20 @@ export default function ShareModal({ isOpen, onClose, lang }) {
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             {lang === 'km'
-              ? 'មិត្តរបស់អ្នកអាចចូលមើលពីទូរស័ព្ទដៃ ឬកុំព្យូទ័របានគ្រប់ទីកន្លែង'
-              : 'Your teammates can open and test this prototype from any phone or computer.'}
+              ? 'មិត្តរបស់អ្នកអាចចូលមើលពីទូរស័ព្ទដៃ ឬកុំព្យូទ័របានភ្លាមៗ ដោយមិនបាច់វាយលេខសម្ងាត់'
+              : 'Your teammates can open and test this prototype from any phone or computer without any password.'}
           </p>
         </div>
 
-        {/* Option 1: Live Public Link */}
+        {/* Option 1: Instant Public Link (NO PASSWORD REQUIRED) */}
         <div className="p-4 rounded-2xl bg-orange-50/80 border border-orange-200 mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-orange-900 uppercase tracking-wider flex items-center gap-1.5">
               <Globe className="w-4 h-4 text-orange-600" />
-              <span>{lang === 'km' ? 'តំណភ្ជាប់សាធារណៈ (ប្រើបានគ្រប់ទីកន្លែង)' : 'Public Internet Link (Share Anywhere)'}</span>
+              <span>{lang === 'km' ? 'តំណភ្ជាប់សាធារណៈ (គ្មានលេខសម្ងាត់)' : 'Direct Public Link (No Password)'}</span>
             </span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-              {lang === 'km' ? 'ដំណើរការផ្ទាល់' : 'Live Online'}
+              {lang === 'km' ? 'ដំណើរការភ្លាមៗ' : 'Instant Access'}
             </span>
           </div>
 
@@ -84,19 +83,9 @@ export default function ShareModal({ isOpen, onClose, lang }) {
               <span>{copiedLink === 'public' ? (lang === 'km' ? 'បានចម្លង!' : 'Copied!') : (lang === 'km' ? 'ចម្លង' : 'Copy')}</span>
             </button>
           </div>
-
-          <div className="mt-2 text-[11px] text-slate-600 flex items-center justify-between">
-            <span>
-              {lang === 'km' ? '🔑 បើគេទាមទារលេខសម្ងាត់ IP (Password) សូមវាយ៖ ' : '🔑 If localtunnel prompts for Tunnel Password, enter: '}
-              <strong className="font-mono text-orange-900">{tunnelPassword}</strong>
-            </span>
-            <button
-              onClick={() => handleCopy(tunnelPassword, 'pw')}
-              className="text-[10px] text-orange-700 underline font-semibold ml-2 hover:text-orange-900"
-            >
-              {copiedLink === 'pw' ? 'Copied' : 'Copy IP'}
-            </button>
-          </div>
+          <p className="text-[11px] text-slate-500 mt-1.5">
+            {lang === 'km' ? '✨ ចុចបើកមើលភ្លាមៗ លើទូរស័ព្ទដៃ ឬកុំព្យូទ័រគ្រប់ទីកន្លែង' : '✨ Opens directly on any phone or laptop anywhere'}
+          </p>
         </div>
 
         {/* Option 2: Same Wi-Fi Link */}
