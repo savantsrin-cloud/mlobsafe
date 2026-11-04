@@ -130,7 +130,7 @@ export default function HeatRiskCalculator() {
                   <span>{t.riskTool.tempLabel}</span>
                 </div>
                 <div className="text-2xl font-black text-gray-900 bg-white px-3 py-1 rounded-xl shadow-sm border border-cream-300">
-                  {temperature}°C
+                  {temperature}&deg;C{language === "en" ? ` (${Math.round((temperature * 9) / 5 + 32)}°F)` : ""}
                 </div>
               </div>
               <input
@@ -204,7 +204,10 @@ export default function HeatRiskCalculator() {
                       : "bg-safety-600"
                   }`}
                 >
-                  <span className="text-3xl leading-none">{heatIndex}°C</span>
+                  <span className="text-3xl leading-none">{heatIndex}&deg;C</span>
+                  {language === "en" && (
+                    <span className="text-xs font-bold text-white/90">({Math.round((heatIndex * 9) / 5 + 32)}&deg;F)</span>
+                  )}
                   <span className="text-xs uppercase font-bold tracking-wider mt-1 opacity-90">Real Feel</span>
                 </div>
 

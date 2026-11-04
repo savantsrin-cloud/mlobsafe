@@ -948,7 +948,7 @@ export default function CambodiaHeatMap() {
                   : "bg-gray-100 hover:bg-gray-200 text-gray-800"
               }`}
             >
-              {temp}&deg;C {temp >= 41 ? "🔥" : ""}
+              {temp}&deg;C{language === "en" ? ` (${Math.round((temp * 9) / 5 + 32)}°F)` : ""} {temp >= 41 ? "🔥" : ""}
             </button>
           ))}
           {masterTemp !== null && (
@@ -1468,8 +1468,13 @@ export default function CambodiaHeatMap() {
                 <Thermometer className="w-4 h-4 text-heat-600" />
                 <span>{language === "km" ? "សីតុណ្ហភាពខ្យល់" : "Air Temperature"}</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black text-gray-900">
-                {currentTemp}&deg;C
+              <div className="text-3xl sm:text-4xl font-black text-gray-900 flex items-baseline gap-2">
+                <span>{currentTemp}&deg;C</span>
+                {language === "en" && (
+                  <span className="text-sm sm:text-base text-gray-500 font-bold font-sans">
+                    ({Math.round((currentTemp * 9) / 5 + 32)}&deg;F)
+                  </span>
+                )}
               </div>
               <div className="text-xs text-heat-700 font-bold mt-1">
                 {currentTemp >= 40 ? "Extreme Scorcher" : "High Tropical Heat"}
@@ -1481,8 +1486,13 @@ export default function CambodiaHeatMap() {
                 <Flame className="w-4 h-4 text-red-600" />
                 <span>{language === "km" ? "កម្ដៅជាក់ស្ដែង (Feels Like)" : "Heat Index (Feels Like)"}</span>
               </div>
-              <div className="text-3xl sm:text-4xl font-black text-red-700">
-                {currentFeelsLike}&deg;C
+              <div className="text-3xl sm:text-4xl font-black text-red-700 flex items-baseline gap-2">
+                <span>{currentFeelsLike}&deg;C</span>
+                {language === "en" && (
+                  <span className="text-sm sm:text-base text-red-500 font-bold font-sans">
+                    ({Math.round((currentFeelsLike * 9) / 5 + 32)}&deg;F)
+                  </span>
+                )}
               </div>
               <div className="text-xs text-red-600 font-bold mt-1">
                 {currentFeelsLike >= 46 ? "Danger of Heat Stroke" : "High Heat Fatigue"}

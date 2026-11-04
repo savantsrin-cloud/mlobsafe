@@ -431,22 +431,26 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
+          {/* Hub 1: Know the Signs (6 Heat Illnesses) */}
           <Link
             href="/signs"
             className="group p-5 sm:p-6 rounded-3xl bg-white border-2 border-heat-200 hover:border-red-400 hover:shadow-card transition flex flex-col justify-between min-w-0"
           >
             <div>
-              {/* Image banner */}
+              {/* Image banner with source credit */}
               <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-4 shadow-xs border border-gray-100 bg-gray-100">
                 <img
-                  src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80"
-                  alt="Heat illness symptom check"
+                  src="/images/hub-signs-heat-illness.jpg"
+                  alt="Understanding Heat-Related Illnesses"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
                 <div className="absolute top-2.5 left-2.5 bg-red-600 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-xs">
                   {language === "km" ? "ជំងឺកម្ដៅទាំង ៦" : "6 Heat Illnesses"}
+                </div>
+                <div className="absolute top-2.5 right-2.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg border border-white/20 shadow-xs">
+                  {language === "km" ? "ប្រភព៖ Heat Illness Guide" : "Credit: Health Guide"}
                 </div>
               </div>
 
@@ -468,22 +472,26 @@ export default function HomePage() {
             </div>
           </Link>
 
+          {/* Hub 2: Protect Yourself (Hydration & Rest) */}
           <Link
             href="/protect"
             className="group p-5 sm:p-6 rounded-3xl bg-white border-2 border-heat-200 hover:border-safety-400 hover:shadow-card transition flex flex-col justify-between min-w-0"
           >
             <div>
-              {/* Image banner */}
+              {/* Image banner with source credit */}
               <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-4 shadow-xs border border-gray-100 bg-gray-100">
                 <img
-                  src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80"
-                  alt="Protection through hydration and shade"
+                  src="/images/hub-protect-hydration.jpg"
+                  alt="Worker Hydration and Shade Rest Protection"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
                 <div className="absolute top-2.5 left-2.5 bg-safety-600 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-xs">
                   {language === "km" ? "សសរស្តម្ភទាំង ៣" : "3 Protection Pillars"}
+                </div>
+                <div className="absolute top-2.5 right-2.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg border border-white/20 shadow-xs">
+                  {language === "km" ? "ប្រភព៖ ការណែនាំផឹកទឹក" : "Credit: Hydration Safety"}
                 </div>
               </div>
 
@@ -505,22 +513,26 @@ export default function HomePage() {
             </div>
           </Link>
 
+          {/* Hub 3: Why It Matters (Data & Statistics) */}
           <Link
             href="/why-it-matters"
             className="group p-5 sm:p-6 rounded-3xl bg-white border-2 border-heat-200 hover:border-heat-400 hover:shadow-card transition flex flex-col justify-between min-w-0"
           >
             <div>
-              {/* Image banner */}
+              {/* Image banner with source credit */}
               <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-4 shadow-xs border border-gray-100 bg-gray-100">
                 <img
-                  src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=600&q=80"
-                  alt="Cambodia heat trends and worker data"
+                  src="/images/hub-why-matters-statistics.jpg"
+                  alt="Heat-Related Illnesses Statistical Distribution Chart"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
                 <div className="absolute top-2.5 left-2.5 bg-heat-600 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-xs">
                   {language === "km" ? "ទិន្នន័យ & ស្ថិតិ" : "Facts & Trends"}
+                </div>
+                <div className="absolute top-2.5 right-2.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg border border-white/20 shadow-xs">
+                  {language === "km" ? "ប្រភព៖ HRI Research Data" : "Credit: HRI Research"}
                 </div>
               </div>
 
@@ -542,22 +554,26 @@ export default function HomePage() {
             </div>
           </Link>
 
+          {/* Hub 4: About & Legal Framework */}
           <Link
             href="/about"
             className="group p-5 sm:p-6 rounded-3xl bg-white border-2 border-heat-200 hover:border-cooling-400 hover:shadow-card transition flex flex-col justify-between min-w-0"
           >
             <div>
-              {/* Image banner */}
+              {/* Image banner with source credit */}
               <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-4 shadow-xs border border-gray-100 bg-gray-100">
                 <img
-                  src="https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80"
-                  alt="Cambodia community solidarity"
+                  src="/images/hub-about-law.jpg"
+                  alt="Cambodia Labour Law and Legal Framework"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
                 <div className="absolute top-2.5 left-2.5 bg-cooling-600 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-xs">
                   {language === "km" ? "ច្បាប់ & ទំនាក់ទំនង" : "Law & Contact"}
+                </div>
+                <div className="absolute top-2.5 right-2.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg border border-white/20 shadow-xs">
+                  {language === "km" ? "ប្រភព៖ ច្បាប់ការងារ (Wix)" : "Credit: Labour Law (Wix)"}
                 </div>
               </div>
 
