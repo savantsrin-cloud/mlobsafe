@@ -10,6 +10,7 @@ import HeatQuiz from "@/components/HeatQuiz";
 import SeasonalTimeline from "@/components/SeasonalTimeline";
 import CoreIconsBar from "@/components/CoreIconsBar";
 import JobTipsFilter from "@/components/JobTipsFilter";
+import LiveHeatMonitor from "@/components/LiveHeatMonitor";
 import dynamic from "next/dynamic";
 
 const CambodiaHeatMap = dynamic(() => import("@/components/CambodiaHeatMap"), {
@@ -245,6 +246,11 @@ export default function HomePage() {
       {/* 2. 5 Core Icons Bar */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <CoreIconsBar />
+      </section>
+
+      {/* Real-Time Heat & Temperature Monitor (Live Weather & Cambodia Records) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <LiveHeatMonitor />
       </section>
 
       {/* 3. Sector-Specific Protection with Real Worker Photos & Filters */}

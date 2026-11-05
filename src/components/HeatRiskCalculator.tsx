@@ -1,18 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { 
   Thermometer, 
   Droplets, 
   Clock, 
-  Activity
+  Activity,
+  MapPin,
+  Flame
 } from "lucide-react";
 
 export default function HeatRiskCalculator() {
   const { language, t } = useLanguage();
   const [temperature, setTemperature] = useState<number>(36);
   const [humidity, setHumidity] = useState<number>(60);
+
+  // Listen for Live Weather values passed from LiveHeatMonitor
+  useEffect(() => {
+    const handleApplyWeather = (e: any) => {
+      if (e && e.detail) {
+        if (typeof e.detail.temperature === "number") setTemperature(e.detail.temperature);
+        if (typeof e.detail.humidity === "number") setHumidity(e.detail.humidity);
+      }
+    };
+    window.addEventListener("mlobsafe_apply_weather", handleApplyWeather);
+    return () => window.removeEventListener("mlobsafe_apply_weather", handleApplyWeather);
+  }, []);
 
   const calculateHeatIndex = (tempC: number, rh: number): number => {
     const T = (tempC * 9) / 5 + 32;
@@ -77,47 +91,80 @@ export default function HeatRiskCalculator() {
         {/* Left Column (lg:col-span-5): Weather Presets & Sliders */}
         <div className="lg:col-span-5 space-y-6">
           <div>
-            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2.5">
-              {t.riskTool.presets}
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                {t.riskTool.presets}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  fetch("https://api.open-meteo.com/v1/forecast?latitude=11.5564&longitude=104.9282&current=temperature_2m,relative_humidity_2m&timezone=Asia%2FBangkok")
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data && data.current) {
+                        setTemperature(Math.round(data.current.temperature_2m));
+                        setHumidity(Math.round(data.current.relative_humidity_2m));
+                      }
+                    })
+                    .catch(() => setPreset(32, 65));
+                }}
+                className="text-xs font-black text-heat-700 hover:text-heat-800 flex items-center gap-1 bg-heat-100 hover:bg-heat-200 px-2.5 py-1 rounded-full transition shadow-xs"
+              >
+                <MapPin className="w-3 h-3 text-heat-600" />
+                <span>{language === "km" ? "ទាញយកអាកាសធាតុភ្នំពេញផ្ទាល់" : "Pull Live Phnom Penh Temp"}</span>
+              </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => setPreset(31, 65)}
-                className={`p-2.5 rounded-xl text-xs font-bold border transition text-left flex items-center justify-between ${
+                className={`p-2.5 rounded-xl text-xs font-bold border transition text-left flex flex-col justify-between ${
                   temperature === 31 && humidity === 65
                     ? "bg-safety-50 border-safety-400 text-safety-800"
                     : "bg-cream-50 border-cream-200 text-gray-700 hover:bg-cream-100"
                 }`}
               >
-                <span>{t.riskTool.presetMorning}</span>
-                <span className="text-xs bg-safety-100 text-safety-800 px-1.5 py-0.5 rounded font-black">31°C</span>
+                <span className="truncate">{t.riskTool.presetMorning}</span>
+                <span className="text-xs bg-safety-100 text-safety-800 px-1.5 py-0.5 rounded font-black w-fit mt-1">31°C</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPreset(37, 55)}
-                className={`p-2.5 rounded-xl text-xs font-bold border transition text-left flex items-center justify-between ${
+                className={`p-2.5 rounded-xl text-xs font-bold border transition text-left flex flex-col justify-between ${
                   temperature === 37 && humidity === 55
                     ? "bg-heat-50 border-heat-400 text-heat-800"
                     : "bg-cream-50 border-cream-200 text-gray-700 hover:bg-cream-100"
                 }`}
               >
-                <span>{t.riskTool.presetMidday}</span>
-                <span className="text-xs bg-heat-100 text-heat-800 px-1.5 py-0.5 rounded font-black">37°C</span>
+                <span className="truncate">{t.riskTool.presetMidday}</span>
+                <span className="text-xs bg-heat-100 text-heat-800 px-1.5 py-0.5 rounded font-black w-fit mt-1">37°C</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPreset(40, 60)}
-                className={`p-2.5 rounded-xl text-xs font-bold border transition text-left flex items-center justify-between ${
+                className={`p-2.5 rounded-xl text-xs font-bold border transition text-left flex flex-col justify-between ${
                   temperature === 40 && humidity === 60
                     ? "bg-danger-50 border-danger-400 text-danger-800"
                     : "bg-cream-50 border-cream-200 text-gray-700 hover:bg-cream-100"
                 }`}
               >
-                <span>{t.riskTool.presetScorcher}</span>
-                <span className="text-xs bg-danger-100 text-danger-800 px-1.5 py-0.5 rounded font-black">40°C</span>
+                <span className="truncate">{t.riskTool.presetScorcher}</span>
+                <span className="text-xs bg-danger-100 text-danger-800 px-1.5 py-0.5 rounded font-black w-fit mt-1">40°C</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPreset(43, 50)}
+                className={`p-2.5 rounded-xl text-xs font-bold border transition text-left flex flex-col justify-between ${
+                  temperature === 43 && humidity === 50
+                    ? "bg-red-50 border-red-500 text-red-900 ring-2 ring-red-400"
+                    : "bg-cream-50 border-cream-200 text-gray-700 hover:bg-cream-100"
+                }`}
+              >
+                <span className="truncate">{language === "km" ? "កំណត់ត្រាក្រចេះ" : "Kratie Record"}</span>
+                <span className="text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded font-black w-fit mt-1">43°C 🔥</span>
               </button>
             </div>
           </div>

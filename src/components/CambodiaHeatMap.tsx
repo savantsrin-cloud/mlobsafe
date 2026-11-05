@@ -1047,20 +1047,30 @@ export default function CambodiaHeatMap() {
 
         {/* Master Temp Quick Simulation Toolbar */}
         <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
-          <span className="text-xs font-bold text-gray-600 mr-1">
-            {language === "km" ? "ក្លែងធ្វើកម្ដៅថ្ងៃត្រង់៖" : "Simulate Heat:"}
+          <span className="text-xs font-bold text-gray-600 mr-1 flex items-center gap-1">
+            <Thermometer className="w-3.5 h-3.5 text-heat-600" />
+            <span>{language === "km" ? "ក្លែងធ្វើតួលេខកម្ដៅជាក់ស្ដែង៖" : "Real Heat Benchmarks:"}</span>
           </span>
-          {[35, 37, 39, 41, 43].map((temp) => (
+          {[
+            { temp: 32, labelKm: "៣២°C (ផ្សាយផ្ទាល់)", labelEn: "32°C (Live)" },
+            { temp: 37, labelKm: "៣៧°C (ថ្ងៃត្រង់)", labelEn: "37°C (Midday)" },
+            { temp: 39, labelKm: "៣៩°C (តំបន់កាត់ដេរ)", labelEn: "39°C (Garment SEZ)" },
+            { temp: 41, labelKm: "៤១°C (ដំបូលស័ង្កសី)", labelEn: "41°C (Tin Roofs)" },
+            { temp: 43, labelKm: "៤៣°C (កំណត់ត្រាក្រចេះ 🔥)", labelEn: "43°C (Kratie Record 🔥)" },
+          ].map((item) => (
             <button
-              key={temp}
-              onClick={() => setMasterTemp(temp)}
+              key={item.temp}
+              onClick={() => setMasterTemp(item.temp)}
               className={`px-3 py-1 rounded-xl text-xs font-black transition-all ${
-                masterTemp === temp
+                masterTemp === item.temp
                   ? "bg-red-600 text-white shadow-xs"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200"
               }`}
             >
-              {temp}&deg;C{language === "en" ? ` (${Math.round((temp * 9) / 5 + 32)}°F)` : ""} {temp >= 41 ? "🔥" : ""}
+              {language === "km" ? item.labelKm : item.labelEn}
+              {language === "en" && masterTemp === item.temp && (
+                <span className="ml-1 text-[10px] font-sans">({Math.round((item.temp * 9) / 5 + 32)}°F)</span>
+              )}
             </button>
           ))}
           {masterTemp !== null && (

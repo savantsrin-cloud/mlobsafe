@@ -59,8 +59,17 @@ export default function Navbar() {
             </span>
           </a>
 
-          {/* Right Group: Heat Map Shortcut & Language Switcher */}
+          {/* Right Group: Live Temp, Heat Map Shortcut & Language Switcher */}
           <div className="flex items-center gap-2">
+            <a
+              href="/#live-heat-monitor"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-amber-950 font-black hover:bg-amber-200 transition shadow-xs text-xs"
+              title="View live temperature & heat records"
+            >
+              <Sun className="w-3.5 h-3.5 text-amber-600 animate-spin-slow" />
+              <span>{language === "km" ? "កម្ដៅផ្ទាល់៖ ៣២°C (ស្មើ ៣៨°C)" : "Live Temp: 32°C (Feels 38°C)"}</span>
+            </a>
+
             <a
               href="/#cambodia-heat-map"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-heat-100/90 border border-heat-300 text-heat-900 font-black hover:bg-heat-200 transition shadow-xs text-xs"

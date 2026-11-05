@@ -278,6 +278,53 @@ export const heatIllnesses: HeatIllness[] = [
 
 export const heatDataAndStatistics: HeatStatGroup[] = [
   {
+    id: "real-cambodia-temperatures",
+    groupTitleEn: "Real Temperature & Heat Records in Cambodia",
+    groupTitleKm: "តួលេខ និងកម្រិតកម្ដៅជាក់ស្ដែងនៅកម្ពុជា",
+    items: [
+      {
+        metric: "43.0°C (109.4°F)",
+        titleEn: "All-Time Highest Ambient Temperature in Cambodia",
+        titleKm: "កំណត់ត្រាសីតុណ្ហភាពខ្ពស់បំផុតក្នុងប្រវត្តិសាស្ត្រកម្ពុជា",
+        descriptionEn: "Officially recorded in Kratie Province in May 2024 by the Ministry of Water Resources and Meteorology (MOWRAM), marking Cambodia's hottest day in 170 years.",
+        descriptionKm: "កត់ត្រាជាផ្លូវការនៅខេត្តក្រចេះក្នុងខែឧសភា ឆ្នាំ២០២៤ ដោយក្រសួងធនធានទឹក និងឧតុនិយម (MOWRAM) ដែលជាថ្ងៃក្តៅបំផុតក្នុងរយៈពេល ១៧០ ឆ្នាំ។",
+        source: "MOWRAM, 2024",
+      },
+      {
+        metric: "52.0°C (125.6°F)",
+        titleEn: "Surface Heat Radiated from Phnom Penh Asphalt Roads",
+        titleKm: "កម្ដៅភាយចេញពីផ្ទៃផ្លូវកៅស៊ូ និងដំបូលស័ង្កសីនៅភ្នំពេញ",
+        descriptionEn: "Midday sun (11 AM - 3 PM) turns road asphalt and concrete into radiant heat ovens, creating dangerous thermal fatigue for Tuk-Tuk drivers and street vendors.",
+        descriptionKm: "ពន្លឺថ្ងៃត្រង់ (១១ ព្រឹក - ៣ រសៀល) ធ្វើឱ្យកៅស៊ូថ្នល់ និងបេតុងឡើងកម្ដៅលើស ៥២°C បង្កគ្រោះថ្នាក់ខ្យល់គរដល់អ្នករត់កង់បី និងអ្នកលក់ដូរតាមផ្លូវ។",
+        source: "Urban Heat Island Study, 2024",
+      },
+      {
+        metric: "31°C - 41°C",
+        titleEn: "Indoor Garment Factory Floor Temperatures",
+        titleKm: "កម្ដៅជាក់ស្ដែងក្នុងរោងចក្រកាត់ដេរ (គ្មានម៉ាស៊ីនត្រជាក់)",
+        descriptionEn: "ILO and Better Factories Cambodia monitoring found 60% of factories fail heat & airflow norms, with indoor workfloor heat reaching 31°C to 41°C under uninsulated tin roofs.",
+        descriptionKm: "ការតាមដានរបស់ ILO និង Better Factories Cambodia រកឃើញថា ៦០% នៃរោងចក្រមិនស្របតាមស្តង់ដារកម្ដៅ ដោយកម្ដៅក្នុងអគារឡើងដល់ ៣១°C ទៅ ៤១°C ក្រោមដំបូលស័ង្កសី។",
+        source: "ILO / BFC, 2024",
+      },
+      {
+        metric: "40.0°C (104.0°F)",
+        titleEn: "Lethal Core Body Temperature for Heat Stroke",
+        titleKm: "កម្រិតកម្ដៅក្នុងរាងកាយគ្រោះថ្នាក់ដល់ជីវិត (Heat Stroke)",
+        descriptionEn: "When core body temperature crosses 40°C, internal thermoregulation collapses. Brain, kidney, and heart damage can occur within 30 minutes unless emergency 119 cooling begins.",
+        descriptionKm: "នៅពេលកម្ដៅក្នុងរាងកាយឡើងលើស ៤០°C ប្រព័ន្ធបញ្ចុះកម្ដៅនឹងគាំង ដែលអាចបំផ្លាញខួរក្បាល តម្រងនោម និងបេះដូងក្នុងរយៈពេល ៣០ នាទី (ហៅ ១១៩ ជាបន្ទាន់)។",
+        source: "Bradford, 2025; CDC, 2026",
+      },
+      {
+        metric: "29.5°C WBT",
+        titleEn: "International Wet-Bulb Temperature Labor Safety Limit",
+        titleKm: "ដែនកំណត់កម្ដៅ Wet-Bulb សុវត្ថិភាពពលកម្មអន្តរជាតិ",
+        descriptionEn: "At 29.5°C to 31°C Wet-Bulb Temperature (WBT), sweat cannot evaporate off human skin. International labor standards mandate 45 minutes of shade rest per 15 minutes of work.",
+        descriptionKm: "នៅកម្រិត ២៩.៥°C ទៅ ៣១°C WBT ញើសមិនអាចហួតបញ្ចុះកម្ដៅស្បែកបានទេ។ ស្តង់ដារពលកម្មអន្តរជាតិតម្រូវឱ្យសម្រាកម្លប់ ៤៥ នាទីរៀងរាល់ធ្វើការ ១៥ នាទី។",
+        source: "ISO 7243 / NIOSH",
+      },
+    ],
+  },
+  {
     id: "heat-trends",
     groupTitleEn: "Cambodia Heat Trends",
     groupTitleKm: "និន្នាការកម្ដៅនៅកម្ពុជា",
